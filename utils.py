@@ -15,7 +15,7 @@ def get_dataset(dir, dataset_name, batch_size, shuffle=False, number_workers=4, 
 
     elif dataset_name == 'cifar':
         transform_train = transforms.Compose([
-            transforms.RandomCrop(32, padding=4),
+            transforms.RandomCrop(224, padding=4),
             transforms.RandomHorizontalFlip(),
             transforms.ToTensor(),
             transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
@@ -53,11 +53,11 @@ def get_dataset(dir, dataset_name, batch_size, shuffle=False, number_workers=4, 
 def get_model(name="vgg16", pretrained=True):
     if name == "resnet18":
         if pretrained:
-            model = models.resnet18(weights="ResNet50_Weights.IMAGENET1K_V1")
+            model = models.resnet18(weights="ResNet18_Weights.IMAGENET1K_V1")
         else:
-            model = models.resnet18(weights='weights=ResNet50_Weights.DEFAULT')
+            model = models.resnet18(weights='ResNet18_Weights.DEFAULT')
     elif name == "resnet50":
-        model = models.resnet50(weights=pretrained)
+        model = models.resnet50(weights='ResNet50_Weights.IMAGENET1K_V1')
     elif name == "densenet121":
         model = models.densenet121(weights=pretrained)
     elif name == "alexnet":

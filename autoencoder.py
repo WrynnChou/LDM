@@ -344,7 +344,7 @@ class UpSample(nn.Module):
         """
         :param x: is the input feature map with shape `[batch_size, channels, height, width]`
         """
-        # Up-sample by a factor of $2$
+        # Up-sampler by a factor of $2$
         x = F.interpolate(x, scale_factor=2.0, mode="nearest")
         # Apply convolution
         return self.conv(x)
@@ -359,7 +359,7 @@ class DownSample(nn.Module):
         :param channels: is the number of channels
         """
         super().__init__()
-        # $3 \times 3$ convolution with stride length of $2$ to down-sample by a factor of $2$
+        # $3 \times 3$ convolution with stride length of $2$ to down-sampler by a factor of $2$
         self.conv = nn.Conv2d(channels, channels, 3, stride=2, padding=0)
 
     def forward(self, x: torch.Tensor):

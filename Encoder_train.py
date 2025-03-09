@@ -91,7 +91,6 @@ parser.add_argument(
 parser.add_argument(
     "--num_classes", default=10, type=int, help= "Number of classes to be classification."
 )
-
 class Log():
     @classmethod
     def Log(cls, name, path):
@@ -213,3 +212,8 @@ if __name__ == '__main__':
     model = Train_model(logger, train_loader, valid_loader, net, device, criterion, args.epochs, 10,
                         1)
     model.process()
+
+    checkpoint = torch.load(args.pretrained, map_location="cpu")
+    # rename moco pre-trained keys
+    state_dict = checkpoint["state_dict"]
+    msg = model.load_state_dict(state_dict, strict=False)

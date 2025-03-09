@@ -95,7 +95,7 @@ class UNetModel(nn.Module):
                 # its output
                 self.input_blocks.append(TimestepEmbedSequential(*layers))
                 input_block_channels.append(channels)
-            # Down sample at all levels except last
+            # Down sampler at all levels except last
             if i != levels - 1:
                 self.input_blocks.append(TimestepEmbedSequential(DownSample(channels)))
                 input_block_channels.append(channels)
@@ -121,7 +121,7 @@ class UNetModel(nn.Module):
                 # Add transformer
                 if i in attention_levels:
                     layers.append(SpatialTransformer(channels, n_heads, tf_layers, d_cond))
-                # Up-sample at every level after last residual block
+                # Up-sampler at every level after last residual block
                 # except the last one.
                 # Note that we are iterating in reverse; i.e. `i == 0` is the last.
                 if i != 0 and j == n_res_blocks:
@@ -218,7 +218,7 @@ class UpSample(nn.Module):
         """
         :param x: is the input feature map with shape `[batch_size, channels, height, width]`
         """
-        # Up-sample by a factor of $2$
+        # Up-sampler by a factor of $2$
         x = F.interpolate(x, scale_factor=2, mode="nearest")
         # Apply convolution
         return self.conv(x)
@@ -234,7 +234,7 @@ class DownSample(nn.Module):
         :param channels: is the number of channels
         """
         super().__init__()
-        # $3 \times 3$ convolution with stride length of $2$ to down-sample by a factor of $2$
+        # $3 \times 3$ convolution with stride length of $2$ to down-sampler by a factor of $2$
         self.op = nn.Conv2d(channels, channels, 3, stride=2, padding=1)
 
     def forward(self, x: torch.Tensor):
@@ -337,7 +337,6 @@ def _test_time_embeddings():
     plt.legend(["dim %d" % p for p in [50, 100, 190, 260]])
     plt.title("Time embeddings")
     plt.show()
-
 
 #
 if __name__ == '__main__':
