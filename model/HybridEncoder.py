@@ -106,7 +106,35 @@ optimizer = optim.Adam(
 
 
 
-
+best_score, score, epochs, early_stop_time, early_stop_threshold= 1e10, 0, 200, 0, 40
+for epoch in range(epochs):
+    loss_record= []
+    for step, (pic, labels) in enumerate(train_loader):
+        pic= pic.view(-1, 1, 28, 28).to(device)
+        optimizer.zero_grad()
+        loss= dm.loss(pic)
+        loss_record.append(loss.item())
+        loss.backward()
+        optimizer.step()
+    print(f'training epoch: {epoch}, mean loss: {torch.tensor(loss_record).mean()}')
+    loss_record= []
+    with torch.no_grad():
+        for step, (pic, labels) in enumerate(valid_loader):
+            pic= pic.view(-1, 1, 28, 28).to(device)
+            loss= dm.loss(pic)
+            loss_record.append(loss.item())
+    mean_loss= torch.tensor(loss_record).mean()
+    # early stopping
+    if mean_loss< best_score:
+        early_stop_time= 0
+        best_score= mean_loss
+        torch.save(u_net, f'{save_dir}')
+    else:
+        early_stop_time= early_stop_time+ 1
+    if early_stop_time> early_stop_threshold:
+        break
+    # output
+    print(f'early_stop_time/early_stop_threshold: {early_stop_time}/{early_stop_threshold}, mean loss: {mean_loss}')
 
 
 
