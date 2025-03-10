@@ -81,6 +81,14 @@ def save_checkpoint(state, is_best, filename="checkpoint.pth.tar"):
     if is_best:
         shutil.copyfile(filename, "model_best.pth.tar")
 
+def label2text(name = 'cifar'):
+    if name == 'cifar':
+        class_names = ['airplane', 'automobile', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship', 'truck']
+    return class_names
+
+def get_text_labels(labels, class_names):
+    return [class_names[label] for label in labels]
+
 if __name__ == "__main__":
     print('Good luck!')
     get_dataset('data', 'cifar', 32, False, 32, True)
