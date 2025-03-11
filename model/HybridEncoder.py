@@ -1,12 +1,11 @@
-import torchvision.models as models
 import torch.nn as nn
-import torch
-from Unet import UNetModel
-from clip_embedder import CLIPTextEmbedder
+
 from utils import *
+
 # 加载预训练的 ResNet50
 resnet50 = models.resnet50(pretrained=True)
-
+for param in resnet50.parameters():
+    param.requires_grad = False
 # 移除最后的全局平均池化层和全连接层
 resnet50_features = nn.Sequential(*list(resnet50.children())[:-2])  # 保留卷积部分
 
@@ -48,95 +47,6 @@ class StableDiffusionWithHybridEncoder(nn.Module):
         latent = self.hybrid_encoder(x)  # 编码到潜在空间
         noise_pred = self.diffusion_model(latent, t)  # 扩散模型预测噪声
         return noise_pred
-
-batch_size = 4  # 批量大小
-channels = 3     # RGB 图像的通道数
-height = 256     # 图像高度
-width = 256      # 图像宽度
-
-# 生成虚拟输入数据（随机值）
-virtual_input = torch.randn(batch_size, channels, height, width)
-virtual_input2 = torch.randn(batch_size, channels, 224, 224)
-time = torch.randint(0, 100, (batch_size,))
-label = torch.randint(0, 10, (batch_size,))
-cond = torch.randn(batch_size, 77, 768) # batch size * n_cond * d_cond
-class_name = label2text('cifar')
-class_text = get_text_labels(label, class_name)
-
-hybrid_encoder = HybridEncoder()
-latent = hybrid_encoder(virtual_input)
-Clip_emb = CLIPTextEmbedder(device='cpu')
-cond = Clip_emb(class_text)
-
-diffusion_model = UNetModel(in_channels=4,
-                               out_channels=4,
-                               channels=320,
-                               attention_levels=[0, 1, 2],
-                               n_res_blocks=2,
-                               channel_multipliers=[1, 2, 4, 4],
-                               n_heads=8,
-                               tf_layers=1,
-                               d_cond=768)
-
-
-time_emb = diffusion_model.time_step_embedding(time)
-t_emb = diffusion_model.time_embed(time_emb)
-x_input_block = []
-x = latent
-
-for module in diffusion_model.input_blocks:
-    x = module(x, t_emb, cond)
-    x_input_block.append(x)
-x = diffusion_model.middle_block(x, t_emb, cond)
-# Output half of the U-Net
-for module in diffusion_model.output_blocks:
-    x = torch.cat([x, x_input_block.pop()], dim=1)
-    x = module(x, t_emb, cond)
-
-import torch.optim as optim
-
-# 定义损失函数
-criterion = nn.MSELoss()
-
-# 定义优化器
-optimizer = optim.Adam(
-    list(hybrid_encoder.parameters()) + list(diffusion_model.parameters()),
-    lr=1e-4
-)
-
-
-
-best_score, score, epochs, early_stop_time, early_stop_threshold= 1e10, 0, 200, 0, 40
-for epoch in range(epochs):
-    loss_record= []
-    for step, (pic, labels) in enumerate(train_loader):
-        pic= pic.view(-1, 1, 28, 28).to(device)
-        optimizer.zero_grad()
-        loss= dm.loss(pic)
-        loss_record.append(loss.item())
-        loss.backward()
-        optimizer.step()
-    print(f'training epoch: {epoch}, mean loss: {torch.tensor(loss_record).mean()}')
-    loss_record= []
-    with torch.no_grad():
-        for step, (pic, labels) in enumerate(valid_loader):
-            pic= pic.view(-1, 1, 28, 28).to(device)
-            loss= dm.loss(pic)
-            loss_record.append(loss.item())
-    mean_loss= torch.tensor(loss_record).mean()
-    # early stopping
-    if mean_loss< best_score:
-        early_stop_time= 0
-        best_score= mean_loss
-        torch.save(u_net, f'{save_dir}')
-    else:
-        early_stop_time= early_stop_time+ 1
-    if early_stop_time> early_stop_threshold:
-        break
-    # output
-    print(f'early_stop_time/early_stop_threshold: {early_stop_time}/{early_stop_threshold}, mean loss: {mean_loss}')
-
-
 
 
 

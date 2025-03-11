@@ -22,7 +22,7 @@ class CLIPTextEmbedder(nn.Module):
     ## CLIP Text Embedder
     """
 
-    def __init__(self, version: str = "openai/clip-vit-large-patch14/clip-vit-large-patch14", device="cuda:0", max_length: int = 77):
+    def __init__(self, version: str = "../openai/clip-vit-large-patch14/clip-vit-large-patch14", device="cuda:0", max_length: int = 77):
         """
         :param version: is the model version
         :param device: is the device

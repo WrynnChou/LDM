@@ -26,7 +26,8 @@ from typing import List
 import torch
 import torch.nn as nn
 
-from model.autoencoder import Autoencoder
+#from model.autoencoder import Autoencoder
+from model.HybridEncoder import HybridEncoder
 from model.clip_embedder import CLIPTextEmbedder
 from model.Unet import UNetModel
 
@@ -58,12 +59,12 @@ class LatentDiffusion(nn.Module):
     * [CLIP embeddings generator](model/clip_embedder.html)
     """
     model: DiffusionWrapper
-    first_stage_model: Autoencoder
+    first_stage_model: HybridEncoder # Autoencoder
     cond_stage_model: CLIPTextEmbedder
 
     def __init__(self,
                  unet_model: UNetModel,
-                 autoencoder: Autoencoder,
+                 autoencoder: HybridEncoder, # Autoencoder,
                  clip_embedder: CLIPTextEmbedder,
                  latent_scaling_factor: float,
                  n_steps: int,

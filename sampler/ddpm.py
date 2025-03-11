@@ -17,6 +17,7 @@ from typing import Optional, List
 
 import numpy as np
 import torch
+import torch.nn.functional as F
 
 from labml import monit
 from latent_diffusion import LatentDiffusion
@@ -223,4 +224,40 @@ class DDPMSampler(DiffusionSampler):
             noise = torch.randn_like(x0)
 
         # Sample from $\mathcal{N} \Big(x_t; \sqrt{\bar\alpha_t} x_0, (1-\bar\alpha_t) \mathbf{I} \Big)$
-        return self.sqrt_alpha_bar[index] * x0 + self.sqrt_1m_alpha_bar[index] * noise
+        return (self.sqrt_alpha_bar[index, None, None, None] * x0
+                + self.sqrt_1m_alpha_bar[index, None, None, None] * noise)
+
+    def loss(self, x0: torch.Tensor, cond: torch.Tensor, noise: Optional[torch.Tensor] = None):
+        """
+        1. 随机抽取一个time_step t
+        2. 执行diffusion process(q_sample)，随机生成噪声epsilon~N(0, I)，
+           然后根据x0, t和epsilon计算xt
+        3. 使用UNet去噪模型（p_sample），根据xt和t得到预测噪声epsilon_theta
+        4. 计算mse_loss(epsilon, epsilon_theta)
+
+        【MSE只是众多可选loss设计中的一种，大家也可以自行设计loss函数】
+
+        Params:
+            x0：来自训练数据的干净的图片
+            noise: diffusion process中随机抽样的噪声epsilon~N(0, I)
+        Return:
+            loss: 真实噪声和预测噪声之间的loss
+        """
+
+        batch_size = x0.shape[0]
+        # 拉到浅空间
+        x0 = self.model.first_stage_model(x0)
+        # 随机抽样t
+        t = torch.randint(0, self.n_steps, (batch_size,), device=x0.device, dtype=torch.long)
+
+        # 如果为传入噪声，则从N(0, I)中抽样噪声
+        if noise is None:
+            noise = torch.randn_like(x0)
+
+        # 执行Diffusion process，计算xt
+        xt = self.q_sample(x0, t, noise)
+        # 执行Denoise Process，得到预测的噪声epsilon_theta
+        eps_theta = self.model(xt, t, cond)
+
+        # 返回真实噪声和预测噪声之间的mse loss
+        return F.mse_loss(noise, eps_theta)

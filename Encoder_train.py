@@ -91,6 +91,7 @@ parser.add_argument(
 parser.add_argument(
     "--num_classes", default=10, type=int, help= "Number of classes to be classification."
 )
+
 class Log():
     @classmethod
     def Log(cls, name, path):
@@ -202,9 +203,9 @@ if __name__ == '__main__':
     writer = tb.SummaryWriter(tensorboard_path)
     device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
-    net = get_model(args.arch)
+    net = get_model(args.arch, args.num_classes)
     net = net.to(device)
-    cudnn.benchmark = True
+    # cudnn.benchmark = True
     criterion = nn.CrossEntropyLoss()
 
     train_loader, valid_loader = get_dataset(args.data, 'cifar', args.batch_size, False,
