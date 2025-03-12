@@ -15,13 +15,14 @@ def get_dataset(dir, dataset_name, batch_size, shuffle=False, number_workers=4, 
 
     elif dataset_name == 'cifar':
         transform_train = transforms.Compose([
-            transforms.RandomResizedCrop(224, scale=(0.2, 1.0)),
+            transforms.RandomResizedCrop(256, scale=(0.2, 1.0)),
             transforms.RandomHorizontalFlip(),
             transforms.ToTensor(),
             transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
         ])
 
         transform_test = transforms.Compose([
+            transforms.RandomResizedCrop(256, scale=(0.2, 1.0)),
             transforms.ToTensor(),
             transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
         ])
@@ -53,26 +54,26 @@ def get_dataset(dir, dataset_name, batch_size, shuffle=False, number_workers=4, 
 def get_model(name="vgg16", num_classes=10, pretrained=False):
     if name == "resnet18":
         if pretrained:
-            model = models.resnet18(weights="ResNet18_Weights.IMAGENET1K_V1", num_classes= num_classes)
+            model = models.resnet18(weights="ResNet18_Weights.IMAGENET1K_V1")
         else:
-            model = models.resnet18(weights='ResNet18_Weights.DEFAULT', num_classes= num_classes)
+            model = models.resnet18(num_classes = num_classes)
     elif name == "resnet50":
         if pretrained:
-            model = models.resnet50(weights='ResNet50_Weights.IMAGENET1K_V1', num_classes= num_classes)
+            model = models.resnet50(weights='ResNet50_Weights.IMAGENET1K_V1')
         else:
             model = models.resnet50(num_classes = num_classes)
     elif name == "densenet121":
-        model = models.densenet121(weights=pretrained)
+        model = models.densenet121(num_classes = num_classes)
     elif name == "alexnet":
-        model = models.alexnet(weights=pretrained)
+        model = models.alexnet(num_classes = num_classes)
     elif name == "vgg16":
-        model = models.vgg16(weights=pretrained)
+        model = models.vgg16(num_classes = num_classes)
     elif name == "vgg19":
-        model = models.vgg19(weights=pretrained)
+        model = models.vgg19(num_classes = num_classes)
     elif name == "inception_v3":
-        model = models.inception_v3(weights=pretrained)
+        model = models.inception_v3(num_classes = num_classes)
     elif name == "googlenet":
-        model = models.googlenet(weights=pretrained)
+        model = models.googlenet(num_classes = num_classes)
 
     if torch.cuda.is_available():
         return model.cuda()

@@ -3,11 +3,10 @@ import argparse
 import datetime
 import logging
 import os
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '0'
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 import time
 
 import torch
-import torch.backends.cudnn as cudnn
 import torch.nn as nn
 from torch import optim
 from torch.utils import tensorboard as tb

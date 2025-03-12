@@ -249,7 +249,6 @@ class DDPMSampler(DiffusionSampler):
         x0 = self.model.first_stage_model(x0)
         # 随机抽样t
         t = torch.randint(0, self.n_steps, (batch_size,), device=x0.device, dtype=torch.long)
-
         # 如果为传入噪声，则从N(0, I)中抽样噪声
         if noise is None:
             noise = torch.randn_like(x0)

@@ -22,7 +22,7 @@ class CLIPTextEmbedder(nn.Module):
     ## CLIP Text Embedder
     """
 
-    def __init__(self, version: str = "../openai/clip-vit-large-patch14/clip-vit-large-patch14", device="cuda:0", max_length: int = 77):
+    def __init__(self, version: str = "openai/clip-vit-large-patch14/clip-vit-large-patch14", device="cuda:0", max_length: int = 77):
         """
         :param version: is the model version
         :param device: is the device
@@ -32,7 +32,7 @@ class CLIPTextEmbedder(nn.Module):
         # Load the tokenizer
         self.tokenizer = CLIPTokenizer.from_pretrained(version)
         # Load the CLIP transformer
-        self.transformer = CLIPTextModel.from_pretrained(version).eval()
+        self.transformer = CLIPTextModel.from_pretrained(version).eval().to(device)
 
         self.device = device
         self.max_length = max_length

@@ -1,5 +1,9 @@
 import argparse
+import os
 
+import torch
+
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'  # 3 = 只显示错误信息
 import torch.nn as nn
 import torch.optim as optim
 
@@ -10,8 +14,8 @@ from model.clip_embedder import CLIPTextEmbedder
 from sampler.ddpm import DDPMSampler
 from utils import *
 
-parser = argparse.ArgumentParser(description="PyTorch Encoder Training")
-parser.add_argument("data", metavar="DIR", help="path to dataset")
+parser = argparse.ArgumentParser(description="PyTorch stable diffusion model Training")
+parser.add_argument("--data", metavar="DIR", help="path to dataset")
 parser.add_argument(
     "-a",
     "--arch",
@@ -63,10 +67,7 @@ parser.add_argument(
     "--seed", default=None, type=int, help="seed for initializing training. "
 )
 parser.add_argument(
-    "--pretrained", default="", type=str, help="path to autoencoder pretrained checkpoint"
-)
-parser.add_argument(
-    "--feature_dir", default="", type=str, help="out feature dir path"
+    "--pretrained", default=None, type=str, help="path to autoencoder pretrained checkpoint"
 )
 parser.add_argument(
     "--num_classes", default=10, type=int, help= "Number of classes to be classification."
@@ -86,12 +87,15 @@ if __name__ == '__main__':
     save_dir = args.save_dir
     n_steps = args.n_steps
 
-    hybrid_encoder = HybridEncoder()
-    Clip_emb = CLIPTextEmbedder("openai/clip-vit-large-patch14/clip-vit-large-patch14", device='cpu')
+    hybrid_encoder = HybridEncoder(args.num_classes, args.pretrained)
+    hybrid_encoder.to(device)
+    Clip_emb = CLIPTextEmbedder("openai/clip-vit-large-patch14/clip-vit-large-patch14", device=device)
     Unet = UNetModel(in_channels=4, out_channels=4, channels=320, attention_levels=[0, 1, 2], n_res_blocks=2,
                                 channel_multipliers=[1, 2, 4, 4], n_heads=8, tf_layers=1, d_cond=768)
     beta= torch.linspace(0.0001, 0.02, n_steps).to(device)
-    latent_dm = LatentDiffusion(Unet, hybrid_encoder, Clip_emb, 2, 1000, 0.0001, 0.2)
+    latent_dm = LatentDiffusion(Unet, hybrid_encoder, Clip_emb, 2, 1000, 0.0001,
+                                0.2)
+    latent_dm.to(device)
     ddpm = DDPMSampler(latent_dm)
     class_name = label2text('cifar')
     # 定义损失函数
@@ -113,8 +117,10 @@ if __name__ == '__main__':
         loss_record= []
         for pic, labels in train_loader:
             pic= pic.to(device)
+            labels = labels
             optimizer.zero_grad()
             cond = latent_dm.get_text_conditioning(get_text_labels(labels, class_name))
+            cond = cond.to(device)
             loss= ddpm.loss(pic, cond)
             loss_record.append(loss.item())
             loss.backward()
@@ -123,8 +129,10 @@ if __name__ == '__main__':
         loss_record= []
         with torch.no_grad():
             for step, (pic, labels) in enumerate(valid_loader):
-                pic= pic.view(-1, 1, 28, 28).to(device)
-                loss= ddpm.loss(pic)
+                pic= pic.to(device)
+                cond = latent_dm.get_text_conditioning(get_text_labels(labels, class_name))
+                cond = cond.to(device)
+                loss= ddpm.loss(pic, cond)
                 loss_record.append(loss.item())
         mean_loss= torch.tensor(loss_record).mean()
         # early stopping
@@ -139,4 +147,5 @@ if __name__ == '__main__':
         # output
         print(f'early_stop_time/early_stop_threshold: {early_stop_time}/{early_stop_threshold}, mean loss: {mean_loss}')
 
+    torch.save(latent_dm.state_dict(), 'log/sdm_checkpoint.pth.tar')
 

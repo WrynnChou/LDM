@@ -2,12 +2,7 @@ import torch.nn as nn
 
 from utils import *
 
-# 加载预训练的 ResNet50
-resnet50 = models.resnet50(pretrained=True)
-for param in resnet50.parameters():
-    param.requires_grad = False
-# 移除最后的全局平均池化层和全连接层
-resnet50_features = nn.Sequential(*list(resnet50.children())[:-2])  # 保留卷积部分
+
 
 class LightweightEncoder(nn.Module):
     def __init__(self, in_channels=2048, out_channels=4):
@@ -27,8 +22,20 @@ class LightweightEncoder(nn.Module):
         return self.adaptor(x)
 
 class HybridEncoder(nn.Module):
-    def __init__(self):
+    def __init__(self, num_classes, path=None):
         super().__init__()
+        # 加载预训练的 ResNet50
+        resnet50 = models.resnet50(num_classes=num_classes)
+        if path is not None:
+            print("=> loading checkpoint '{}'".format(path))
+            checkpoint = torch.load(path, map_location="cpu")
+            state_dict = checkpoint["state_dict"]
+            msg = resnet50.load_state_dict(state_dict, strict=False)
+            print(msg)
+        for param in resnet50.parameters():
+            param.requires_grad = False
+        # 移除最后的全局平均池化层和全连接层
+        resnet50_features = nn.Sequential(*list(resnet50.children())[:-2])  # 保留卷积部分
         self.resnet50_features = resnet50_features  # ResNet50 特征提取器
         self.lightweight_encoder = LightweightEncoder()  # 轻量级编码器
 
