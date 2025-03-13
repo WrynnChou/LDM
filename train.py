@@ -109,7 +109,7 @@ if __name__ == '__main__':
         list(hybrid_encoder.parameters()) + list(Unet.parameters()),
         lr=1e-4
     )
-    train_loader, valid_loader = get_dataset('data', 'cifar', 8, False, 4, True)
+    train_loader, valid_loader = get_dataset('data', 'cifar', args.batch_size, False, 4, True)
     loss_record = []
 
     best_score, score, epochs, early_stop_time, early_stop_threshold= 1e10, 0, 200, 0, 40
@@ -147,5 +147,5 @@ if __name__ == '__main__':
         # output
         print(f'early_stop_time/early_stop_threshold: {early_stop_time}/{early_stop_threshold}, mean loss: {mean_loss}')
 
-    torch.save(latent_dm.state_dict(), 'log/sdm_checkpoint.pth.tar')
+        torch.save(latent_dm.state_dict(), 'log/sdm_checkpoint.pth.tar')
 
