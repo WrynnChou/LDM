@@ -28,7 +28,7 @@ class HybridEncoder(nn.Module):
         resnet50 = models.resnet50(num_classes=num_classes)
         if path is not None:
             print("=> loading checkpoint '{}'".format(path))
-            checkpoint = torch.load(path, map_location="cpu")
+            checkpoint = torch.load(path, map_location="cpu", weights_only=True)
             state_dict = checkpoint["state_dict"]
             msg = resnet50.load_state_dict(state_dict, strict=False)
             print(msg)

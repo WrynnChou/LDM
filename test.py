@@ -3,11 +3,11 @@ import argparse
 import torch
 
 from latent_diffusion import LatentDiffusion
-# from model.HybridEncoder import HybridEncoder
-# from model.Unet import UNetModel
-# from model.clip_embedder import CLIPTextEmbedder
-# from sampler.ddpm import DDPMSampler
-# from utils import *
+from model.HybridEncoder import HybridEncoder
+from model.Unet import UNetModel
+from model.clip_embedder import CLIPTextEmbedder
+from sampler.ddpm import DDPMSampler
+from utils import *
 
 parser = argparse.ArgumentParser(description="PyTorch stable diffusion model Training")
 parser.add_argument("--data", metavar="DIR", help="path to dataset")
@@ -84,16 +84,16 @@ parser.add_argument(
 #     plt.show()
 
 if __name__ == '__main__':
-    # args = parser.parse_args()
-    # device =  'cuda:0' if torch.cuda.is_available else 'cpu'
-    # xt, images, texts= torch.randn((160, 4, 3, 3), device= device), [], []
+    args = parser.parse_args()
+    device =  'cpu'
+    xt, label = torch.randn((4, 4, 32, 32), device= device), [1]
 
     hybrid_encoder = HybridEncoder(args.num_classes, args.pretrained)
     Clip_emb = CLIPTextEmbedder("openai/clip-vit-large-patch14/clip-vit-large-patch14", device=device)
     Unet = UNetModel(in_channels=4, out_channels=4, channels=160, attention_levels=[0, 1, 2], n_res_blocks=2,
                                 channel_multipliers=[1, 2, 4, 4], n_heads=8, tf_layers=1, d_cond=768)
-    hybrid_encoder.load_state_dict(torch.load('log/encoder.pth.tar'))
-    Unet.load_state_dict(torch.load('log/unet.pth.tar'))
+    hybrid_encoder.load_state_dict(torch.load('log/encoder.pth.tar', weights_only=True))
+    Unet.load_state_dict(torch.load('log/unet.pth.tar', weights_only=True))
     hybrid_encoder.to(device)
     Unet.to(device)
     latent_dm = LatentDiffusion(Unet, hybrid_encoder, Clip_emb, 2, 1000, 0.0001,0.2)
@@ -104,13 +104,9 @@ if __name__ == '__main__':
     cond = Clip_emb(get_text_labels(label, classname))
     dm = DDPMSampler(latent_dm)
     for t in reversed(range(1000)):
+        print('step: '+ str(t))
         xt_1= dm.p_sample(xt, cond, torch.tensor([t]).to(device), t)
-        xt= xt_1
-        if (t+ 1)% 100== 1:
-            images.append(xt.view(1, 28, 28).to('cpu').detach())
-            texts.append(t+ 1)
+        xt= xt_1[0]
 
-    images_= torch.stack(images, dim= 0)
-    show_sample(images_, texts)
 
     print('Have a nice day!')
