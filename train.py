@@ -37,10 +37,10 @@ parser.add_argument(
 parser.add_argument(
     "-b",
     "--batch-size",
-    default=128,
+    default=32,
     type=int,
     metavar="N",
-    help="mini-batch size (default: 128), this is the total "
+    help="mini-batch size (default: 32), this is the total "
          "batch size of all GPUs on the current node when "
          "using Data Parallel or Distributed Data Parallel",
 )
@@ -109,7 +109,7 @@ if __name__ == '__main__':
         list(hybrid_encoder.parameters()) + list(Unet.parameters()),
         lr=1e-4
     )
-    train_loader, valid_loader = get_dataset('data', 'cifar', args.batch_size, False, 4, True)
+    train_loader, valid_loader = get_dataset('data', 'cifar', args.batch_size, False, args.workers, True)
     loss_record = []
 
     best_score, score, epochs, early_stop_time, early_stop_threshold= 1e10, 0, 200, 0, 40
@@ -139,7 +139,8 @@ if __name__ == '__main__':
         if mean_loss< best_score:
             early_stop_time= 0
             best_score= mean_loss
-            torch.save(Unet, f'{save_dir}')
+            torch.save(Unet.state_dict(), f'{save_dir}/unet.pth.tar')
+            torch.save(hybrid_encoder.state_dict(), f'{save_dir}/encoder.pth.tar')
         else:
             early_stop_time= early_stop_time+ 1
         if early_stop_time> early_stop_threshold:

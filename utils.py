@@ -95,4 +95,4 @@ def get_text_labels(labels, class_names):
 
 if __name__ == "__main__":
     print('Good luck!')
-    get_dataset('data', 'cifar', 32, False, 32, True)
+    # get_dataset('data', 'cifar', 32, False, 32, True)

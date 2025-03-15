@@ -117,22 +117,22 @@ class LatentDiffusion(nn.Module):
         """
         return self.cond_stage_model(prompts)
 
-    def autoencoder_encode(self, image: torch.Tensor):
-        """
-        ### Get scaled latent space representation of the image
+    # def autoencoder_encode(self, image: torch.Tensor):
+    #     """
+    #     ### Get scaled latent space representation of the image
+    #
+    #     The encoder output is a distribution.
+    #     We sample from that and multiply by the scaling factor.
+    #     """
+    #     return self.latent_scaling_factor * self.first_stage_model.encode(image).sample()
 
-        The encoder output is a distribution.
-        We sample from that and multiply by the scaling factor.
-        """
-        return self.latent_scaling_factor * self.first_stage_model.encode(image).sample()
-
-    def autoencoder_decode(self, z: torch.Tensor):
-        """
-        ### Get image from the latent representation
-
-        We scale down by the scaling factor and then decode.
-        """
-        return self.first_stage_model.decode(z / self.latent_scaling_factor)
+    # def autoencoder_decode(self, z: torch.Tensor):
+    #     """
+    #     ### Get image from the latent representation
+    #
+    #     We scale down by the scaling factor and then decode.
+    #     """
+    #     return self.first_stage_model.decode(z / self.latent_scaling_factor)
 
     def forward(self, x: torch.Tensor, t: torch.Tensor, context: torch.Tensor):
         """
