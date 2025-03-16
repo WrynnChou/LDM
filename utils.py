@@ -93,6 +93,7 @@ def label2text(name = 'cifar'):
 def get_text_labels(labels, class_names):
     return [class_names[label] for label in labels]
 
+
 if __name__ == "__main__":
     print('Good luck!')
     # get_dataset('data', 'cifar', 32, False, 32, True)

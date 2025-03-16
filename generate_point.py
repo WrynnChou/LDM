@@ -115,5 +115,5 @@ if __name__ == '__main__':
         else:
             generated_data = xt
         torch.save(xt, 'log/sample.pth.tar')
-
+    
     print('Have a nice day!')
