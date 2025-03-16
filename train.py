@@ -1,16 +1,14 @@
 import argparse
 import os
 
-import torch
-
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'  # 3 = 只显示错误信息
 import torch.nn as nn
 import torch.optim as optim
 
-from latent_diffusion import LatentDiffusion
+from model.Latent_diffusion import LatentDiffusion
 from model.HybridEncoder import HybridEncoder
 from model.Unet import UNetModel
-from model.clip_embedder import CLIPTextEmbedder
+from model.Clip_embedder import CLIPTextEmbedder
 from sampler.ddpm import DDPMSampler
 from utils import *
 

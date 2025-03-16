@@ -5,11 +5,11 @@ This file use a virtual input help u to see the shape of each block.
 import torch.nn as nn
 
 from model.Unet import UNetModel
-from model.clip_embedder import CLIPTextEmbedder
+from model.Clip_embedder import CLIPTextEmbedder
 from sampler.ddpm import DDPMSampler
 from model.HybridEncoder import HybridEncoder
 from utils import *
-from latent_diffusion import LatentDiffusion
+from model.Latent_diffusion import LatentDiffusion
 
 batch_size = 4  # 批量大小
 channels = 3     # RGB 图像的通道数

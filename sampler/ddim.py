@@ -19,7 +19,7 @@ import numpy as np
 import torch
 
 from labml import monit
-from latent_diffusion import LatentDiffusion
+from model.Latent_diffusion import LatentDiffusion
 from sampler import DiffusionSampler
 
 

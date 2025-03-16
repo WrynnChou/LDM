@@ -20,7 +20,7 @@ import torch
 import torch.nn.functional as F
 
 from labml import monit
-from latent_diffusion import LatentDiffusion
+from model.Latent_diffusion import LatentDiffusion
 from sampler import DiffusionSampler
 
 
@@ -192,11 +192,12 @@ class DDPMSampler(DiffusionSampler):
         # If same noise is used for all samples in the batch
         elif repeat_noise:
             noise = torch.randn((1, *x.shape[1:]))
+            noise = noise.to(self.model.device)
         # Different noise for each sample
         else:
             noise = torch.randn(x.shape)
+            noise = noise.to(self.model.device)
 
-        noise = noise.to(self.model.device)
         # Multiply noise by the temperature
         noise = noise * temperature
 

@@ -28,7 +28,7 @@ import torch.nn as nn
 
 #from model.autoencoder import Autoencoder
 from model.HybridEncoder import HybridEncoder
-from model.clip_embedder import CLIPTextEmbedder
+from model.Clip_embedder import CLIPTextEmbedder
 from model.Unet import UNetModel
 
 

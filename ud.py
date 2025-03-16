@@ -17,17 +17,5 @@ def shift(design, block):
     final_matrix = res.transpose(1, 0, 2).reshape(n, -1)
     return final_matrix
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-print('Have a nice day!')
+if __name__ == '__main__':
+    print('Have a nice day!')

@@ -1,11 +1,9 @@
 import argparse
 
-import torch
-
-from latent_diffusion import LatentDiffusion
+from model.Latent_diffusion import LatentDiffusion
 from model.HybridEncoder import HybridEncoder
 from model.Unet import UNetModel
-from model.clip_embedder import CLIPTextEmbedder
+from model.Clip_embedder import CLIPTextEmbedder
 from sampler.ddpm import DDPMSampler
 from utils import *
 from ud import generate_ud
@@ -111,6 +109,6 @@ if __name__ == '__main__':
             generated_data = torch.concatenate([generated_data, xt])
         else:
             generated_data = xt
-        torch.save(xt, 'log/sample.pth.tar')
+        torch.save(generated_data, 'log/sample.pth.tar')
     
     print('Have a nice day!')
