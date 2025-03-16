@@ -196,6 +196,7 @@ class DDPMSampler(DiffusionSampler):
         else:
             noise = torch.randn(x.shape)
 
+        noise = noise.to(self.model.device)
         # Multiply noise by the temperature
         noise = noise * temperature
 

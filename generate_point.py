@@ -8,6 +8,7 @@ from model.Unet import UNetModel
 from model.clip_embedder import CLIPTextEmbedder
 from sampler.ddpm import DDPMSampler
 from utils import *
+from ud import generate_ud
 
 parser = argparse.ArgumentParser(description="PyTorch stable diffusion model Training")
 parser.add_argument("--data", metavar="DIR", help="path to dataset")
@@ -73,19 +74,13 @@ parser.add_argument(
 parser.add_argument(
     "--save_dir", default="log", type=str, help="Diffusion model checkpoint dir path"
 )
-
-# def show_sample(images, texts):
-#     _, figs= plt.subplots(1, len(images), figsize= (12, 12))
-#     for text, f, img in zip(texts, figs, images):
-#         f.imshow(img.view(28, 28), cmap= 'gray')
-#         f.axes.get_xaxis().set_visible(False)
-#         f.axes.get_yaxis().set_visible(False)
-#         f.text(0.5, 0, text, ha= 'center', va= 'bottom', fontsize= 12, color= 'white', backgroundcolor= 'black')
-#     plt.show()
+parser.add_argument(
+    "--num", default=100, type=int, help= "Number of generated sample in each class."
+)
 
 if __name__ == '__main__':
     args = parser.parse_args()
-    device =  'cpu'
+    device =  'cuda:0'
 
 
     hybrid_encoder = HybridEncoder(args.num_classes, args.pretrained)
@@ -99,12 +94,14 @@ if __name__ == '__main__':
     latent_dm = LatentDiffusion(Unet, hybrid_encoder, Clip_emb, 2, 1000, 0.0001,0.2)
     latent_dm.to(device)
     classname = label2text('cifar')
+    dm = DDPMSampler(latent_dm)
 
     generated_data = None
     for i in range(10):
-        xt, label = torch.randn((100, 4, 32, 32), device= device), [i]
+        # xt, label = torch.randn((args.num, 4, 32, 32), device= device), [i] # randomly generate
+        # ud generate
+        xt, label = torch.as_tensor(generate_ud(args.num, 4, 1024)).reshape([args.num, 4, 32, 32]).to(device).float(), [i]
         cond = Clip_emb(get_text_labels(label, classname))
-        dm = DDPMSampler(latent_dm)
         for t in reversed(range(1000)):
             print('step: '+ str(t))
             xt_1= dm.p_sample(xt, cond, torch.tensor([t]).to(device), t)
