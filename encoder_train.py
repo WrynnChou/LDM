@@ -123,7 +123,6 @@ class Train_model():
         self.max_epoch = max_epoch
         self.train_interval = train_interval
         self.valid_interval = valid_interval
-        # self.device = torch.device('cuda:2' if torch.cuda.is_available() else 'cpu')
 
     def train(self, epoch):
         self.net.train()
