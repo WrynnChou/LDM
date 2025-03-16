@@ -86,7 +86,7 @@ parser.add_argument(
 if __name__ == '__main__':
     args = parser.parse_args()
     device =  'cpu'
-    xt, label = torch.randn((4, 4, 32, 32), device= device), [1]
+
 
     hybrid_encoder = HybridEncoder(args.num_classes, args.pretrained)
     Clip_emb = CLIPTextEmbedder("openai/clip-vit-large-patch14/clip-vit-large-patch14", device=device)
@@ -98,15 +98,22 @@ if __name__ == '__main__':
     Unet.to(device)
     latent_dm = LatentDiffusion(Unet, hybrid_encoder, Clip_emb, 2, 1000, 0.0001,0.2)
     latent_dm.to(device)
-
-    label = [1]
     classname = label2text('cifar')
-    cond = Clip_emb(get_text_labels(label, classname))
-    dm = DDPMSampler(latent_dm)
-    for t in reversed(range(1000)):
-        print('step: '+ str(t))
-        xt_1= dm.p_sample(xt, cond, torch.tensor([t]).to(device), t)
-        xt= xt_1[0]
 
+    generated_data = None
+    for i in range(10):
+        xt, label = torch.randn((100, 4, 32, 32), device= device), [i]
+        cond = Clip_emb(get_text_labels(label, classname))
+        dm = DDPMSampler(latent_dm)
+        for t in reversed(range(1000)):
+            print('step: '+ str(t))
+            xt_1= dm.p_sample(xt, cond, torch.tensor([t]).to(device), t)
+            xt= xt_1[0]
+
+        if generated_data is not None:
+            generated_data = torch.concatenate([generated_data, xt])
+        else:
+            generated_data = xt
+        torch.save(xt, 'log/sample.pth.tar')
 
     print('Have a nice day!')
