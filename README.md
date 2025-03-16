@@ -2,6 +2,8 @@
 
 ​	This repository provides an implement of Distribution Filling Back-Propagation.  We use stable diffusion model to generate more virtual samples from uniform design points rather than random points in the latent space, in order to fine-tuning the classification model. 
 
+![figure](processon2.png)
+
 ## Requirement
 
 This work use CLIP as the condition model. Ones can get the weights from:
