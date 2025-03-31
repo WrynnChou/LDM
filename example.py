@@ -11,14 +11,14 @@ from model.HybridEncoder import HybridEncoder
 from utils import *
 from model.Latent_diffusion import LatentDiffusion
 
-batch_size = 4  # 批量大小
+batch_size = 7  # 批量大小
 channels = 3     # RGB 图像的通道数
 height = 256   # 图像高度
 width = 256     # 图像宽度
 device = 'cpu'
 save_dir = 'log'
 n_steps = 1000
-out_channels = 4
+out_channels = 2048
 
 # 生成虚拟输入数据（随机值）
 virtual_input = torch.randn(batch_size, channels, height, width)
@@ -28,17 +28,18 @@ label = torch.randint(0, 10, (batch_size,))
 class_name = label2text('cifar')
 class_text = get_text_labels(label, class_name)
 
-hybrid_encoder = HybridEncoder(10)
+hybrid_encoder = HybridEncoder(10).resnet50_features
 Clip_emb = CLIPTextEmbedder("openai/clip-vit-large-patch14/clip-vit-large-patch14", device='cpu')
 
+l1 = hybrid_encoder(virtual_input)
 latent = hybrid_encoder(virtual_input)
 cond = Clip_emb(class_text)
 
 print("The shape of latent space: " + str(latent.shape))
 print("The shape of text embedding: " + str(cond.shape))
 
-Unet = UNetModel(in_channels=4, out_channels=4, channels=160, attention_levels=[0, 1, 2], n_res_blocks=2,
-                            channel_multipliers=[1, 2, 4, 4], n_heads=8, tf_layers=1, d_cond=768)
+Unet = UNetModel(in_channels=2048, out_channels=2048, channels=160, attention_levels=[0, 1], n_res_blocks=2,
+                 channel_multipliers=[1, 2], n_heads=8, tf_layers=1, d_cond=768)
 beta= torch.linspace(0.0001, 0.02, n_steps).to(device)
 latent_dm = LatentDiffusion(Unet, hybrid_encoder, Clip_emb, 2, 1000, 0.0001, 0.2)
 ddpm = DDPMSampler(latent_dm)
@@ -51,9 +52,11 @@ print("Time embedding after MLP: " + str(t_emb.shape))
 # first stage
 x_input_block = []
 x = latent
-
+i = 0
 for module in Unet.input_blocks:
     x = module(x, t_emb, cond)
+    print("In input step " + str(i) + ", the shape of x is " + str(x.shape))
+    i += 1
     x_input_block.append(x)
 
 print("After first stage: " + str(x.shape))
@@ -66,6 +69,8 @@ print("After middle block: " + str(x.shape))
 for module in Unet.output_blocks:
     x = torch.cat([x, x_input_block.pop()], dim=1)
     x = module(x, t_emb, cond)
+    print("In output step " + str(i) + ", the shape of x is " + str(x.shape))
+    i -= 1
 print("After second stage: " + str(x.shape))
 
 class GroupNorm32(nn.GroupNorm):

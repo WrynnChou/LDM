@@ -83,9 +83,10 @@ if __name__ == '__main__':
 
     hybrid_encoder = HybridEncoder(args.num_classes, args.pretrained)
     Clip_emb = CLIPTextEmbedder("openai/clip-vit-large-patch14/clip-vit-large-patch14", device=device)
-    Unet = UNetModel(in_channels=4, out_channels=4, channels=160, attention_levels=[0, 1, 2], n_res_blocks=2,
-                                channel_multipliers=[1, 2, 4, 4], n_heads=8, tf_layers=1, d_cond=768)
+    Unet = UNetModel(in_channels=2048, out_channels=2048, channels=160, attention_levels=[0, 1], n_res_blocks=2,
+                     channel_multipliers=[1, 2], n_heads=8, tf_layers=1, d_cond=768)
     hybrid_encoder.load_state_dict(torch.load('log/encoder.pth.tar', weights_only=True))
+
     Unet.load_state_dict(torch.load('log/unet.pth.tar', weights_only=True))
     hybrid_encoder.to(device)
     Unet.to(device)
@@ -98,7 +99,7 @@ if __name__ == '__main__':
     for i in range(10):
         # xt, label = torch.randn((args.num, 4, 32, 32), device= device), [i] # randomly generate
         # ud generate
-        xt, label = torch.as_tensor(generate_ud(args.num, 4, 1024)).reshape([args.num, 4, 32, 32]).to(device).float(), [i]
+        xt, label = torch.as_tensor(generate_ud(args.num, 4, 1024)).reshape([args.num, 2048, 8, 8]).to(device).float(), [i]
         cond = Clip_emb(get_text_labels(label, classname))
         for t in reversed(range(1000)):
             print('step: '+ str(t))
