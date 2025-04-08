@@ -11,8 +11,9 @@ from torch import optim
 from torch.utils import tensorboard as tb
 from torchvision import transforms, datasets
 from utils import get_model, get_dataset, save_checkpoint
-
-
+from torch.utils.data import TensorDataset
+from model.Lincls import Discriminator
+from model.HybridEncoder import HybridEncoder
 
 parser = argparse.ArgumentParser(description="PyTorch Encoder Training")
 parser.add_argument("data", metavar="DIR", help="path to dataset")
@@ -32,7 +33,7 @@ parser.add_argument(
     help="number of data loading workers (default: 8)",
 )
 parser.add_argument(
-    "--epochs", default=100, type=int, metavar="N", help="number of total epochs to run"
+    "--epochs", default=40, type=int, metavar="N", help="number of total epochs to run"
 )
 parser.add_argument(
     "--start-epoch",
@@ -62,7 +63,7 @@ parser.add_argument(
 )
 parser.add_argument(
     "--schedule",
-    default=[30, 60, 80],
+    default=[10, 20, 30],
     nargs="*",
     type=int,
     help="learning rate schedule (when to drop lr by a ratio)",
@@ -94,7 +95,7 @@ parser.add_argument(
 parser.add_argument(
     "--fine-tuning", default="random", type=str, help="Decide which modes should be used for fine-tuning."
 )
-parser.add_argument("--subsetsize", default=1000, type=int, help="Size of additional samples.")
+parser.add_argument("--subsetsize_each_class", default=100, type=int, help="Size of additional samples of each class.")
 parser.add_argument(
     "-p",
     "--print-freq",
@@ -127,7 +128,12 @@ def main():
             torch.utils.data.random_split(train_dataset, [args.subsetsize, len(train_dataset) - args.subsetsize],
                                           generator=generator1)[0]
         print("Training model with randomly selected subset")
-
+    else:
+        fake_data = torch.load(args.fine_tuning)
+        cla = torch.arange(args.num_classes).reshape([args.num_classes, 1])
+        each_class = torch.ones([1, args.subsetsize_each_class])
+        fake_label = (cla * each_class).reshape([args.num_classes * args.subsetsize_each_class])
+        train_dataset =  TensorDataset(fake_data, fake_label)
 
     train_loader = torch.utils.data.DataLoader(
         train_dataset,
@@ -145,7 +151,7 @@ def main():
         pin_memory=True,
     )
 
-    model = get_model(args.arch, args.num_classes)
+    full_model = get_model(args.arch, args.num_classes)
 
 
     if args.pretrained:
@@ -155,17 +161,21 @@ def main():
 
             # rename moco pre-trained keys
             state_dict = checkpoint["state_dict"]
-            msg = model.load_state_dict(state_dict, strict=False)
+            msg = full_model.load_state_dict(state_dict, strict=False)
             print(msg)
             print("=> loaded pre-trained model '{}'".format(args.pretrained))
         else:
             print("=> no checkpoint found at '{}'".format(args.pretrained))
 
-    for name, param in model.named_parameters():
+    for name, param in full_model.named_parameters():
         if name not in ["fc.weight", "fc.bias"]:
             param.requires_grad = False
 
+    model = Discriminator(full_model.avgpool, full_model.fc)
     model.to(device)
+    hymodel = HybridEncoder(10, 'log/checkpoint.pth.tar')
+    res = hymodel.resnet50_features
+    
     criterion = nn.CrossEntropyLoss().cuda(device)
     parameters = list(filter(lambda p: p.requires_grad, model.parameters()))
     optimizer = torch.optim.SGD(

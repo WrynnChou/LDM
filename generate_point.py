@@ -85,7 +85,7 @@ if __name__ == '__main__':
     Clip_emb = CLIPTextEmbedder("openai/clip-vit-large-patch14/clip-vit-large-patch14", device=device)
     Unet = UNetModel(in_channels=2048, out_channels=2048, channels=160, attention_levels=[0, 1], n_res_blocks=2,
                      channel_multipliers=[1, 2], n_heads=8, tf_layers=1, d_cond=768)
-    hybrid_encoder.load_state_dict(torch.load('log/encoder.pth.tar', weights_only=True))
+    hybrid_encoder.load_state_dict(torch.load('log/checkpoint.pth.tar', weights_only=True))
 
     Unet.load_state_dict(torch.load('log/unet.pth.tar', weights_only=True))
     hybrid_encoder.to(device)

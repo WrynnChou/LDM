@@ -94,6 +94,25 @@ def get_text_labels(labels, class_names):
     return [class_names[label] for label in labels]
 
 
+def extract_and_concat_features(model, dataloader, device="cuda"):
+    model.to(device)
+    all_features = []
+
+    with torch.no_grad():  # 不计算梯度，节省内存
+        for batch in dataloader:
+            # 假设 batch 是 (inputs, labels)，根据你的 DataLoader 调整
+            inputs = batch[0].to(device)
+
+            # 前向传播，提取特征
+            features = model(inputs)  # 形状: (batch_size, feature_dim)
+
+            # 将特征移到CPU并存储
+            all_features.append(features.cpu())
+
+    # 拼接所有 batch 的特征
+    concatenated_features = torch.cat(all_features, dim=0)  # 形状: (N, feature_dim)
+    return concatenated_features
+
 if __name__ == "__main__":
     print('Good luck!')
     # get_dataset('data', 'cifar', 32, False, 32, True)
